@@ -35,7 +35,7 @@ testing <- dataTrain[-inTrain, ]
 dim(training)
 dim(testing)
 
-# Code to cheack possibles NearZeroVariance Variables.
+# Code to cheack possibles Near Zero Variance Variables.
 NZV_check <- nearZeroVar(training, saveMetrics = TRUE)
 NZV_check
 
@@ -92,8 +92,78 @@ rm(temp_test)
 
 # Codes to build the models:
 
+# Random Forest Algorithm
+set.seed(13563)
+modelFitRF <- randomForest(classe~., data = training)
 
-modelFitRF <- train(roll_dumbbell~pitch_dumbbell, data = dataTrain, method = "rf", prox = TRUE)
+# Cross validating the model:
+predictFitRF <- predict(modelFitRF, testing, type = "class")
 
-modelFitGBM <- train(classe~yaw_arm, data = dataTrain, method = "gbm", verbose = FALSE)
+# To check the accuracy:
+accuracy_FitRF <- confusionMatrix(predictFitRF, testing$classe)
+accuracy_FitRF
+
+# The accuracy of the Random Forest model is 0.9983, a very good one. To facilitate the visualization, I intend to plot it.
+plot(modelFitRF, main = "Random Forest Algorithm")
+
+plot(accuracy_FitRF$table, col = accuracy_FitRF$byClass, main = paste("Random Forest Algorithm Accuracy =", round(accuracy_FitRF$overall['Accuracy'], 4)))
+
+
+# Decision Tree Algorithm
+set.seed(13563)
+modelFitDT <- rpart(classe ~., data = training, method = "class")
+fancyRpartPlot(modelFitDT)
+
+# Cross validating the model:
+predictFitDT <- predict(modelFitDT, testing, type = "class")
+
+# To check the accuracy:
+accuracy_FitDT <- confusionMatrix(predictFitDT, testing$classe)  
+accuracy_FitDT
+
+# The model accuracy rate is 0.8731. Not a bad one, but less then Random Forest's.Again, in order to facilitate the visualization, a plot is needed.
+plot(accuracy_FitDT$table, col = accuracy_FitDT$byClass, main = paste("Decision Tree Algorithm Accuracy =", round(accuracy_FitDT$overall['Accuracy'], 4)))
+
+
+# Boosted Trees Algorithm
+library(plyr)
+set.seed(13563)
+
+# I usually don't use the trainControl function at the caret package because one of its uses is allow to perform a variety of cross validation.
+# As the Confusion Matrix and the predict function allow us to do the same, I usually don't see the point to trainControl the model. However, in this case
+# the model fit is taking to long, so I used it to cut it short.
+
+FitControlGBM <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+
+modelFitGBM <- train(classe~., data = training, method = "gbm", trControl = FitControlGBM, verbose = FALSE)
+
+FinalmodelFitGBM <- modelFitGBM$finalModel
+
+# Cross validating the model:
+predictFitGBM <- predict(modelFitGBM, newdata = testing)
+
+# To check the accuracy:
+accuracy_FitGBM <- confusionMatrix(predictFitGBM, testing$classe)
+accuracy_FitGBM
+
+# The accuracy of the model is rated at 0.9966. Although, comparing to Random Forest's 0.9983 it's not the best model. 
+# Once again, a plot to facilitate the visualization.
+plot(modelFitGBM, ylim = c(0.9, 1))
+
+## Using the prediction model to predict 20 different test cases
+# Random Forests gave an accuracy of 99.89%, this means that this model is more accurate then the Decision Trees or GBM models.
+# The expected out-of-sample error is 0.11% (100-99.89).
+prediction_results <- predict(modelFitRF, testing, type = "class")
+prediction_results
+
+# To generate a text file with predictions to submit for assignment:
+file_to_assignment <- function(x){
+  n=length(x)
+  for (i in 1:n) {
+    filename = paste0("problem_id_", i, ".txt")
+    write.table(x[i], file = filename, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+}
+
+file_to_assignment(prediction_results)
 
