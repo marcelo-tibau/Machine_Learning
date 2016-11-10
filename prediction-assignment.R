@@ -87,7 +87,7 @@ testing <- temp_test
 rm(temp_test)
 
 
-# I choose to build 3 models. One model, using a random forest ("rf"), the other, using decision trees and a third, using boosted trees ("gbm").
+# I chose to build 3 models. One model, using a random forest ("rf"), the other, using decision trees and a third, using boosted trees ("gbm").
 # Then, I intend to cross validate it predicting the outcomes and checking the accuracy of each model at the testing set.
 
 # Codes to build the models:
