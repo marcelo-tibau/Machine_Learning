@@ -167,3 +167,26 @@ file_to_assignment <- function(x){
 
 file_to_assignment(prediction_results)
 
+
+## Codes to answer the Course Project Prediction Quizz
+
+# code for submission
+
+dataTest <- dataTest[,colSums(is.na(dataTest)) == 0]
+
+colnames(dataTest)
+
+dataTest <- dataTest[c(-60)]
+
+dataTest["classe"] <- NA 
+
+dataTest <- dataTest[c(-1)]
+
+feature_set <- colnames(training)
+newdata <- dataTest
+
+x <- newdata 
+x <- x[feature_set[feature_set!='classe']]
+
+answers <- predict(modelFitRF, newdata=x)
+
